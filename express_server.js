@@ -49,6 +49,16 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.get("/u/:shortURL", (req, res) => {
+  let longURL = null;
+  urlDatabase.forEach(function(url) {
+    if (url.id == req.params.shortURL) {
+      longURL = url.url;
+    }
+  })
+  res.redirect(longURL);
+});
+
 app.post("/urls", (req, res) => {
   console.log(req.body);  // debug statement to see POST parameters
   res.send("Ok");         // Respond with 'Ok' (we will replace this)
