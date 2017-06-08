@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/_header') %>
+</head>
+<body>
+  <ul>
+    <% for (var i = 0; i < urls.length; i++) { %>
+    <li><%= urls[i].url %>, <%= urls[i].id %></li>
+    <% } %>
+  </ul>
+</body>
+</html>
