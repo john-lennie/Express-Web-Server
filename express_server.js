@@ -22,6 +22,12 @@ var urlDatabase = [
 // set the view engine to ejs
 app.set("view engine", "ejs")
 
+// login route
+app.post("/login", (req, res) => {
+  res.cookie("username", req.body.username);
+  res.redirect("/urls");
+});
+
 // add new URl page
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
