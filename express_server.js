@@ -45,6 +45,17 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// edit URL
+app.post("/urls/:id", (req, res) => {
+  urlDatabase.forEach(function(url, i) {
+    if (url.id === req.params.id) {
+      url.url = req.body.newLongURL;
+    }
+  })
+  console.log(urlDatabase);
+  res.redirect("/urls");
+});
+
 // redirect shortURL to longURL
 app.get("/u/:shortURL", (req, res) => {
   let longURL = null;
