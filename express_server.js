@@ -29,15 +29,12 @@ app.get("/urls/new", (req, res) => {
 
 // all URLs page
 app.get("/urls", (req, res) => {
-  // define  object as templateVars variable
   let templateVars = { urls: urlDatabase };
-  // pass the object to the render method so we can make certain data available for the template
   res.render("urls_index", templateVars);
 });
 
 // single URL page given an id
 app.get("/urls/:id", (req, res) => {
-  // run through objects in database to see if given id is equal to an objects id, if it is define a new variable equal to fullURL
   let fullURL = null;
   urlDatabase.forEach(function(url) {
     if (url.id == req.params.id) {
@@ -45,10 +42,10 @@ app.get("/urls/:id", (req, res) => {
     }
   })
   let templateVars = { shortURL: req.params.id, fullURL: fullURL };
-  // pass the object to the render method so we can make certain data available for the template
   res.render("urls_show", templateVars);
 });
 
+// redirect shortURL to longURL
 app.get("/u/:shortURL", (req, res) => {
   let longURL = null;
   urlDatabase.forEach(function(url) {
@@ -59,15 +56,33 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+// add new url to database
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // debug statement to see POST parameters
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  urlDatabase.push({ id: generateRandomString(), url: req.body.longURL });
+  console.log(urlDatabase);
+  res.send("URL Submitted");         // Respond with 'Ok' (we will replace this)
+});
+
+// delete url from database
+app.post("/urls/:id/delete", (req, res) => {
+  var urlIndex = null;
+  urlDatabase.forEach(function(url, i) {
+    if (url.id === req.params.id) {
+      urlIndex = i;
+    }
+  })
+  if (urlIndex) {
+    urlDatabase.splice(urlIndex, 1);
+    console.log(urlDatabase);
+  }
+  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+// generateRandomString function
 function generateRandomString() {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

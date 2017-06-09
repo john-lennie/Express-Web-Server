@@ -7,6 +7,7 @@
   <ul>
     <% for (var i = 0; i < urls.length; i++) { %>
     <li><%= urls[i].url %>, <%= urls[i].id %></li>
+    <form action="/urls/<%= urls[i].id %>/delete" method="POST" style="margin:10px 0;"><input type="submit" value="Delete"></form>
     <% } %>
   </ul>
 </body>
