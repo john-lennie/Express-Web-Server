@@ -2,13 +2,17 @@
 var express = require("express");
 var app = express();
 
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
+
 var cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 var PORT = process.env.PORT || 8080; // default port 8080
 
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
 
 // fake shortened URLs to simulate a database
 var urlDatabase = [
@@ -22,8 +26,25 @@ var urlDatabase = [
   }
 ];
 
+var userDatabase = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+}
+
+// --------------------------------------------------------------
+
 // set the view engine to ejs
 app.set("view engine", "ejs")
+
+// --------------------------------------------------------------
 
 // login route
 app.post("/login", (req, res) => {
@@ -37,20 +58,56 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
-// add new URl page
+// --------------------------------------------------------------
+
+// render registratin page
+app.get("/register", (req, res) => {
+  let templateVars = { username: req.cookies.username };
+  res.render("urls_register", templateVars);
+});
+
+// post new user to user database
+app.post("/register", (req, res) => {
+  let newUserId = generateRandomString();
+  for (user in userDatabase) {
+    if (userDatabase[user].email == req.body.email) {
+      console.log("400 Bad Request");
+      res.status(400).send("Email already exists");
+      return;
+    }
+  }
+  userDatabase[newUserId] = {id: newUserId, email: req.body.email, password: req.body.password};
+  console.log(userDatabase);
+  res.cookie("user_id", newUserId);
+  res.redirect("/urls");
+});
+
+// --------------------------------------------------------------
+
+// render add new URl page
 app.get("/urls/new", (req, res) => {
   let templateVars = { username: req.cookies.username };
   res.render("urls_new", templateVars);
 });
 
-// all URLs page
+// post new URL to url database
+app.post("/urls", (req, res) => {
+  urlDatabase.push({ id: generateRandomString(), url: req.body.longURL });
+  console.log(urlDatabase);
+  res.redirect("/urls");
+});
+
+// --------------------------------------------------------------
+
+// render all URLs page
 app.get("/urls", (req, res) => {
   let templateVars = { username: req.cookies.username, urls: urlDatabase };
-  console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 
-// single URL page given an id
+// --------------------------------------------------------------
+
+// render specific URL page
 app.get("/urls/:id", (req, res) => {
   let fullURL = null;
   urlDatabase.forEach(function(url) {
@@ -62,7 +119,9 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// edit URL
+// --------------------------------------------------------------
+
+// post/replace an edited url
 app.post("/urls/:id", (req, res) => {
   urlDatabase.forEach(function(url, i) {
     if (url.id === req.params.id) {
@@ -72,6 +131,8 @@ app.post("/urls/:id", (req, res) => {
   console.log(urlDatabase);
   res.redirect("/urls");
 });
+
+// --------------------------------------------------------------
 
 // redirect shortURL to longURL
 app.get("/u/:shortURL", (req, res) => {
@@ -84,12 +145,7 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
-// add new url to database
-app.post("/urls", (req, res) => {
-  urlDatabase.push({ id: generateRandomString(), url: req.body.longURL });
-  console.log(urlDatabase);
-  res.send("URL Submitted");         // Respond with 'Ok' (we will replace this)
-});
+// --------------------------------------------------------------
 
 // delete url from database
 app.post("/urls/:id/delete", (req, res) => {
@@ -106,9 +162,7 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
+// --------------------------------------------------------------
 
 // generateRandomString function
 function generateRandomString() {
