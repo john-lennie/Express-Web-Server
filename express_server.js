@@ -75,6 +75,11 @@ app.post("/register", (req, res) => {
       res.status(400).send("Email already exists");
       return;
     }
+  };
+  if (req.body.email == "" || req.body.password == "") {
+    console.log("400 Bad Request");
+    res.status(400).send("Both fields required");
+    return;
   }
   userDatabase[newUserId] = {id: newUserId, email: req.body.email, password: req.body.password};
   console.log(userDatabase);
