@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <% include partials/_header %>
+  </head>
+  <body>
+
+    <% if (user_id) { %>
+      <p><%= user_id %></p>
+      <form action="/logout" method="POST">
+        <input type="submit" value="Logout">
+      </form> <% ; %>
+    <% } else { %>
+      <form action="/login" method="POST">
+        <input id="email" type="text" name="email" placeholder="email" style="width: 300px"><br />
+        <input id="password" type="text" name="password" placeholder="password" style="width: 300px"><br />
+        <input type="submit" value="Login">
+      </form> <% ; %>
+    <% } %>
+
+  </body>
+</html>

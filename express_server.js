@@ -1,72 +1,43 @@
-// require and instantiate express
-var express = require("express");
-var app = express();
+// ---------------------------- Require and instantiate express ----------------------------------
+
+const express = require("express");
+const app = express();
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
-var cookieParser = require('cookie-parser');
+const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
-var PORT = process.env.PORT || 8080; // default port 8080
+const PORT = process.env.PORT || 8080; // default port 8080
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-// fake shortened URLs to simulate a database
-var urlDatabase = [
-  {
-    "id": "b2xVn2",
-    "url": "http://www.lighthouselabs.ca",
-  },
-  {
-    "id": "9sm5xK",
-    "url": "http://www.google.com"
-  }
-];
+// ---------------------------- "Databases" ----------------------------------
 
-var userDatabase = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur"
-  },
- "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk"
-  }
+var urlDatabase = [];
+
+var userDatabase = {};
+
+// ------------------------------ generateRandomString Function --------------------------------
+
+function generateRandomString() {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for( var i=0; i < 6; i++ )
+      text += possible.charAt(Math.floor(Math.random() * possible.length));
+  return text;
 }
 
-// --------------------------------------------------------------
+// ----------------------------- Set EJS View Engine ---------------------------------
 
-// set the view engine to ejs
 app.set("view engine", "ejs")
 
-// --------------------------------------------------------------
+// --------------------------- COOKIES -----------------------------------
 
-// login route
-app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("/urls");
-});
-
-// logout route
-app.post("/logout", (req, res) => {
-  res.clearCookie("username");
-  res.redirect("/urls");
-});
-
-// --------------------------------------------------------------
-
-// render registratin page
-app.get("/register", (req, res) => {
-  let templateVars = { username: req.cookies.username };
-  res.render("urls_register", templateVars);
-});
-
-// post new user to user database
+// ADD NEW USER TO DATABASE (ID: ID, EMAIL & PASSWORD) & CREATE COOKIE (USER_ID)
 app.post("/register", (req, res) => {
   let newUserId = generateRandomString();
   for (user in userDatabase) {
@@ -83,36 +54,58 @@ app.post("/register", (req, res) => {
   }
   userDatabase[newUserId] = {id: newUserId, email: req.body.email, password: req.body.password};
   console.log(userDatabase);
-  res.cookie("user_id", newUserId);
+  res.cookie("user_id", userDatabase[newUserId].id);
   res.redirect("/urls");
 });
 
-// --------------------------------------------------------------
-
-// render add new URl page
-app.get("/urls/new", (req, res) => {
-  let templateVars = { username: req.cookies.username };
-  res.render("urls_new", templateVars);
-});
-
-// post new URL to url database
-app.post("/urls", (req, res) => {
-  urlDatabase.push({ id: generateRandomString(), url: req.body.longURL });
-  console.log(urlDatabase);
+// LOGOUT
+app.post("/logout", (req, res) => {
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
-// --------------------------------------------------------------
+// ACTIVATE EXISTING USER COOKIE
+app.post("/login", (req, res) => {
+  var activeUser = null;
+  for (user in userDatabase) {
+    if (userDatabase[user].email === req.body.email && userDatabase[user].password === req.body.password) {
+      activeUser = userDatabase[user].id;
+    }
+  };
+  console.log(userDatabase);
+  res.cookie("user_id", activeUser);
+  res.redirect("/urls");
+});
 
-// render all URLs page
+
+
+// ----------------------------- GET & RENDER Templates ---------------------------------
+
+// /urls page
 app.get("/urls", (req, res) => {
-  let templateVars = { username: req.cookies.username, urls: urlDatabase };
+  let templateVars = { user_id: req.cookies.user_id, urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
-// --------------------------------------------------------------
+// /urls/new page
+app.get("/urls/new", (req, res) => {
+  let templateVars = { user_id: req.cookies.user_id };
+  res.render("urls_new", templateVars);
+});
 
-// render specific URL page
+// /login page
+app.get("/login", (req, res) => {
+  let templateVars = { user_id: req.cookies.user_id };
+  res.render("urls_login", templateVars);
+});
+
+// /register page
+app.get("/register", (req, res) => {
+  let templateVars = { user_id: req.cookies.user_id };
+  res.render("urls_register", templateVars);
+});
+
+// /urls/:id page
 app.get("/urls/:id", (req, res) => {
   let fullURL = null;
   urlDatabase.forEach(function(url) {
@@ -120,13 +113,35 @@ app.get("/urls/:id", (req, res) => {
       fullURL = url.url;
     }
   })
-  let templateVars = { username: req.cookies.username, shortURL: req.params.id, fullURL: fullURL };
+  let templateVars = { user_id: req.cookies.user_id, shortURL: req.params.id, fullURL: fullURL };
   res.render("urls_show", templateVars);
 });
 
-// --------------------------------------------------------------
+// ---------------------------- POST/GET --> REDIRECT Actions ----------------------------------
 
-// post/replace an edited url
+// add URL to urlDatabase
+app.post("/urls", (req, res) => {
+  urlDatabase.push({ id: generateRandomString(), url: req.body.longURL });
+  console.log(urlDatabase);
+  res.redirect("/urls");
+});
+
+// delete url from database
+app.post("/urls/:id/delete", (req, res) => {
+  var urlIndex = null;
+  urlDatabase.forEach(function(url, i) {
+    if (url.id === req.params.id) {
+      urlIndex = i;
+    }
+  })
+  if (urlIndex >= 0) {
+    urlDatabase.splice(urlIndex, 1);
+    console.log(urlDatabase);
+  }
+  res.redirect("/urls");
+});
+
+// replace an edited url
 app.post("/urls/:id", (req, res) => {
   urlDatabase.forEach(function(url, i) {
     if (url.id === req.params.id) {
@@ -136,8 +151,6 @@ app.post("/urls/:id", (req, res) => {
   console.log(urlDatabase);
   res.redirect("/urls");
 });
-
-// --------------------------------------------------------------
 
 // redirect shortURL to longURL
 app.get("/u/:shortURL", (req, res) => {
@@ -149,31 +162,3 @@ app.get("/u/:shortURL", (req, res) => {
   })
   res.redirect(longURL);
 });
-
-// --------------------------------------------------------------
-
-// delete url from database
-app.post("/urls/:id/delete", (req, res) => {
-  var urlIndex = null;
-  urlDatabase.forEach(function(url, i) {
-    if (url.id === req.params.id) {
-      urlIndex = i;
-    }
-  })
-  if (urlIndex) {
-    urlDatabase.splice(urlIndex, 1);
-    console.log(urlDatabase);
-  }
-  res.redirect("/urls");
-});
-
-// --------------------------------------------------------------
-
-// generateRandomString function
-function generateRandomString() {
-  var text = "";
-  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for( var i=0; i < 6; i++ )
-      text += possible.charAt(Math.floor(Math.random() * possible.length));
-  return text;
-}
