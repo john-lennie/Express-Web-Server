@@ -26,7 +26,7 @@ var userDatabase = {};
 function generateRandomString() {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for( var i=0; i < 6; i++ )
+  for (var i = 0; i < 6; i++ )
       text += possible.charAt(Math.floor(Math.random() * possible.length));
   return text;
 }
@@ -83,8 +83,18 @@ app.post("/login", (req, res) => {
 
 // /urls page
 app.get("/urls", (req, res) => {
-  let templateVars = { user_id: req.cookies.user_id, urls: urlDatabase };
-  res.render("urls_index", templateVars);
+  var urlMatches = [];
+  if (!req.cookies.user_id) {
+    res.send("Please login or register");
+  } else {
+    for (var i = 0; i < urlDatabase.length; i++) {
+      if (urlDatabase[i].userID === req.cookies.user_id) {
+        urlMatches.push(urlDatabase[i]);
+      }
+    }
+    let templateVars = { user_id: req.cookies.user_id, urls: urlMatches };
+    res.render("urls_index", templateVars);
+  }
 });
 
 // /urls/new page
@@ -117,7 +127,7 @@ app.get("/urls/:id", (req, res) => {
       fullURL = url.url;
     }
   })
-  let templateVars = { user_id: req.cookies.user_id, shortURL: req.params.id, fullURL: fullURL };
+  let templateVars = { user_id: req.cookies.user_id, urls: urlDatabase, shortURL: req.params.id, fullURL: fullURL };
   res.render("urls_show", templateVars);
 });
 

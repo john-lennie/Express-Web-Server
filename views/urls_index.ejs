@@ -5,15 +5,18 @@
 </head>
 <body>
 
-  <ul>
     <% for (var i = 0; i < urls.length; i++) { %>
-      <li><%= urls[i].url %>, <%= urls[i].id %></li>
       <% if (user_id === urls[i].userID) { %>
+
+        <ul>
+          <li><%= urls[i].url %>, <%= urls[i].id %></li>
+        </ul>
+
         <a href="/urls/<%= urls[i].id %>">Edit</a>
         <form action="/urls/<%= urls[i].id %>/delete" method="POST"><input type="submit" value="Delete"></form>
+        
       <% } %>
     <% } %>
-  </ul>
 
 </body>
 </html>

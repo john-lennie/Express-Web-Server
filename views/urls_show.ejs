@@ -5,16 +5,20 @@
 </head>
 <body>
 
-  <ul>
-    <li><%= fullURL %>, <%= shortURL %></li>
-  </ul>
+  <% for (var i = 0; i < urls.length; i++) { %>
+    <% if (user_id === urls[i].userID) { %>
 
-  <p>
-    <form action="/urls/<%= shortURL %>" method="POST">
-      <input id="newLongURL" type="text" name="newLongURL" placeholder="http://" style="width: 300px">
-      <input type="submit" value="Update">
-    </form>
-  </p>
+      <ul>
+        <li><%= fullURL %>, <%= shortURL %></li>
+      </ul>
+
+      <form action="/urls/<%= shortURL %>" method="POST">
+        <input id="newLongURL" type="text" name="newLongURL" placeholder="http://" style="width: 300px">
+        <input type="submit" value="Update">
+      </form>
+
+    <% } %>
+  <% } %>
 
 </body>
 </html>
