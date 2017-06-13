@@ -43,7 +43,7 @@ app.post("/register", (req, res) => {
   for (user in userDatabase) {
     if (userDatabase[user].email == req.body.email) {
       console.log("400 Bad Request");
-      res.status(400).send("Email already exists");
+      res.status(400).send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/login"></head></html>');
       return;
     }
   };
@@ -89,8 +89,12 @@ app.get("/urls", (req, res) => {
 
 // /urls/new page
 app.get("/urls/new", (req, res) => {
-  let templateVars = { user_id: req.cookies.user_id };
-  res.render("urls_new", templateVars);
+  if (!req.cookies.user_id) {
+    res.redirect("/login");
+  } else {
+    let templateVars = { user_id: req.cookies.user_id };
+    res.render("urls_new", templateVars);
+  }
 });
 
 // /login page
@@ -121,12 +125,12 @@ app.get("/urls/:id", (req, res) => {
 
 // add URL to urlDatabase
 app.post("/urls", (req, res) => {
-  urlDatabase.push({ id: generateRandomString(), url: req.body.longURL });
+  urlDatabase.push({ id: generateRandomString(), url: req.body.longURL, userID: req.cookies.user_id });
   console.log(urlDatabase);
   res.redirect("/urls");
 });
 
-// delete url from database
+// delete url
 app.post("/urls/:id/delete", (req, res) => {
   var urlIndex = null;
   urlDatabase.forEach(function(url, i) {
@@ -141,7 +145,7 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-// replace an edited url
+// edit url
 app.post("/urls/:id", (req, res) => {
   urlDatabase.forEach(function(url, i) {
     if (url.id === req.params.id) {
