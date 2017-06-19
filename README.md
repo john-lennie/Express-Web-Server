@@ -1,5 +1,7 @@
 ## Final Product
 
+![alt text](https://github.com/john-lennie/Express-Web-Server/blob/master/images/tinyapp.gif "TinyApp gif")
+
 ## Dependencies
 
 - Node.js
