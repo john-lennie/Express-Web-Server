@@ -9,6 +9,8 @@ app.use(bodyParser.urlencoded({extended: true}));
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
+const bcrypt = require('bcrypt');
+
 const PORT = process.env.PORT || 8080; // default port 8080
 
 app.listen(PORT, () => {
@@ -39,6 +41,8 @@ app.set("view engine", "ejs")
 
 // ADD NEW USER TO DATABASE (ID: ID, EMAIL & PASSWORD) & CREATE COOKIE (USER_ID)
 app.post("/register", (req, res) => {
+  const password = req.body.password;
+  const hashed_password = bcrypt.hashSync(password, 10);
   let newUserId = generateRandomString();
   for (user in userDatabase) {
     if (userDatabase[user].email == req.body.email) {
@@ -52,7 +56,7 @@ app.post("/register", (req, res) => {
     res.status(400).send("Both fields required");
     return;
   }
-  userDatabase[newUserId] = {id: newUserId, email: req.body.email, password: req.body.password};
+  userDatabase[newUserId] = {id: newUserId, email: req.body.email, password: hashed_password};
   console.log(userDatabase);
   res.cookie("user_id", userDatabase[newUserId].id);
   res.redirect("/urls");
@@ -68,7 +72,7 @@ app.post("/logout", (req, res) => {
 app.post("/login", (req, res) => {
   var activeUser = null;
   for (user in userDatabase) {
-    if (userDatabase[user].email === req.body.email && userDatabase[user].password === req.body.password) {
+    if (userDatabase[user].email === req.body.email && bcrypt.compareSync(req.body.password, userDatabase[user].password)) {
       activeUser = userDatabase[user].id;
     }
   };
